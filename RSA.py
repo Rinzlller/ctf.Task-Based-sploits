@@ -4,6 +4,7 @@ import base64
 import binascii
 from sympy.ntheory.factor_ import totient
 from Crypto.Util.number import inverse
+from math import gcd
 
 def main():
 	
