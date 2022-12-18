@@ -25,31 +25,30 @@ def main():
 	text = f.read()
 	f.close()
 
-	alpha = [""]*23
-	k = 0
+	print( *[len(i) for i in text.split("\n")] )
 
-	c = text.replace("_", " ")
-	c = c.split()
-	for word in c:
-		letters = [''.join(i) for i in grouper(word, 4)]
-		for letter in letters:
-			if not(letter in alpha) and letter != '':
-				alpha[k] = letter
-				k += 1
+	# alpha = [""]*27
+	# k = 0
 
-	for i in range(len(alpha)):
-		for j in range(i+1, len(alpha)):
-			if text.count(alpha[i]) < text.count(alpha[j]):
-				alpha[i], alpha[j] = alpha[j], alpha[i]
+	# for letter in text:
+	# 	if not(letter in alpha):
+	# 		alpha[k] = letter
+	# 		k += 1
+	# print(k)
 
-	summ = (len(text)-text.count(" "))//4
-	for word in alpha:
-		print(word, text.count(word)/summ*100)
+	# for i in range(len(alpha)):
+	# 	for j in range(i+1, len(alpha)):
+	# 		if text.count(alpha[i]) < text.count(alpha[j]):
+	# 			alpha[i], alpha[j] = alpha[j], alpha[i]
 
-	row = "eoitsanhrldfmcwyugpbkv"
-	for i in range(len(row)):
-		text = text.replace(alpha[i], row[i])
-	print(text)
+	# summ = (len(text)-text.count(" "))
+	# for word in alpha:
+	# 	print(word, text.count(word)/summ*100)
+
+	# row = " eoitsanhrldfmcwyugpbkv"
+	# for i in range(len(row)):
+	# 	text = text.replace(alpha[i], row[i])
+	# print(text)
 
 
 

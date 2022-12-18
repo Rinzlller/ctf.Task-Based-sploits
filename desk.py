@@ -1,59 +1,30 @@
 #!/usr/bin/env python3
 
-import requests
-import sys
-import re
-import random
+# WORDLIST:	/usr/share/wordlists/rockyou.txt
 
-flagRegEx = "[A-Z0-9]{31}="
-port = None # define port of service
-our_host = None # define it in attack sploit
-DEBUG = True # dont forgot change it in attack sploit
+# import requests
+# from urllib.parse import quote, unquote			#unquote("%2F")		quote("\")
+# from html import unescape
+# from hashlib import md5
 
-alph = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789'
+# from pwn import *
+# from json import dumps							#dumps({"key":"value"})
+# from os import system
 
-def idg( size = 8, chars=alph ):
-	return ''.join( random.choice( chars ) for _ in range( size ) )
+# import string
 
-def login():
-	pass
+#===========================================================
+#                    EXPLOIT GOES HERE
+#===========================================================
 
-def register():
-	pass
+def main():
+	w = [116, 124, 111, 147, 116, 152, 125, 147, 116, 155, 121, 147, 116, 152, 125, 147, 116, 155, 121, 147, 116, 152, 111, 147, 116, 152, 125, 147, 116, 172, 111, 147, 115, 152, 101, 147, 116, 172, 121, 147, 116, 152, 147, 147, 116, 152, 105, 147, 116, 172, 121, 147, 115, 152, 101, 147, 116, 152, 125, 147, 116, 172, 131, 147, 116, 152, 125, 147, 116, 172, 111, 147, 116, 172, 153, 147, 116, 172, 121, 147, 116, 152, 147, 147, 116, 152, 153, 147, 116, 155, 125, 147, 116, 152, 143, 147, 115, 152, 101, 147, 116, 172, 153, 147, 116, 155, 131, 147, 116, 172, 125, 147, 115, 152, 101, 147, 116, 152, 121, 147, 116, 155, 131, 147, 115, 152, 101, 147, 116, 155, 125, 147, 116, 152, 125, 147, 116, 152, 125, 147, 116, 152, 121, 147, 116, 172, 115, 147, 115, 152, 101, 147, 116, 172, 121, 147, 116, 155, 131, 147, 115, 152, 101, 147, 116, 152, 143, 147, 116, 155, 131, 147, 115, 152, 101, 147, 116, 152, 111, 147, 116, 152, 105, 147, 116, 152, 115, 147, 116, 155, 111, 147, 116, 172, 143, 147, 116, 152, 105, 147, 116, 172, 111, 147, 116]
+	print( "".join([chr(i-57) for i in w]) )
+
 
 if __name__ == "__main__":
-
-	if len( sys.argv ) > 1:
-		host = sys.argv[ 1 ]
-	else:
-		print "Usage python " + sys.argv[ 0 ] + " <host>"
-		sys.exit( -1 )
-
-	if not our_host and not DEBUG:
-		print "Set our_host var!!!!"
-		sys.exit( -2 )
-	if not port:
-		print "Set port var!!!!"
-		sys.exit( -3 )
-
-	if host == our_host:
-		sys.exit( -4 )
-
-	host = 'http://' + host + ":" + str( port ) + "/"
-
-	print(idg())
-	
-	# sys.stdout.flush() # after print
-	# resp = requests.get( host )
-
-	# find flags and print on stdout
-	# flag_list = re.findall( flagRegEx, buf )
-	# for flag in flag_list:
-	#	print flag
-
-	# POST requests
-	# data = { 'key':'value', 'key1':'value1' }
-	# res = requests.post( host + "some-url", data=data )
+	main()
 
 
-	# do not forgot about strip(), split(), replace() - functions to parsing
+# rev		baby rev 		ping{r3v3rs1ng_c4n_b3_S0_muCH_FUN!!!}
+# crypto	dialog			ping{B451c5_0f_3ncrypt10n_t00_345y?-K3y_r3tr13v3d!}
