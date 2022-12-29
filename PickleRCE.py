@@ -1,21 +1,5 @@
 #!/usr/bin/env python3
 
-# WORDLIST:	/usr/share/wordlists/rockyou.txt
-
-# from urllib.parse import quote, unquote			#unquote("%2F")		quote("\")
-# from html import unescape
-# from hashlib import md5
-
-# from pwn import *
-# from json import dumps							#dumps({"key":"value"})
-# from os import system
-
-# import string
-
-#===========================================================
-#                    EXPLOIT GOES HERE
-#===========================================================
-
 import requests
 import pickle, base64
 import pickletools
