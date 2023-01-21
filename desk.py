@@ -2,14 +2,15 @@
 
 # WORDLIST:	/usr/share/wordlists/rockyou.txt
 
-# import requests
 # from urllib.parse import quote, unquote			#unquote("%2F")		quote("\")
 # from html import unescape
 # from hashlib import md5
 
 # from pwn import *
-# from json import dumps							#dumps({"key":"value"})
 # from os import system
+# import requests
+# from base64 import *
+# from json import dumps, loads							#dumps({"key":"value"})
 
 # import string
 
@@ -17,67 +18,28 @@
 #                    EXPLOIT GOES HERE
 #===========================================================
 
+code = "ANEcwu4fYegObF1i2VXyvJHxKd0qBkMl36ILRaUjPG8rToSZzpCDt7n9mWsh5Q"
+
 def main():
-	with open("CT.txt", "r") as f:
-		ct = f.read()
-	ct = ''.join(ct.split())
 
-	# AVERAGE IC must be about 0.0686
-	# (or choice the first MAX value)
-	for key_len in range(1, 21):
-		print( "{}\t|\t{:.4f}\t|".format(key_len, IC_average(ct, key_len)) )
+	ct = "9N_GN_tN_wu_qY_xi_Md_08_zfN_ctN_HQE_O7w_vnf_xZb_1Gv_VB6_y6f_lNG_H5N_0Nr_xNo_dBG_09j_rZI_QwB_122_CHT_tE1_qDO_emd_0Za_xuV_I2Y_Bxd_WG6_Okb_sgS_7cb_GPO_cSx_a0L_BRb_r0N_Ac1_Bli_4Rk_3fo_KfB_oj0_wOY_StI_acr"
+	words = ct.split("_")
+	nums = [0] * len(words)
 	
-	key_len = 17
-	print()
-	Chi_square_test(ct, key_len)
-
-
-def IC_average(ct: str, key_len: int) -> int:
-
-	ic = 0
-	ic_average = 0
-	for group_id in range(key_len):
-		
-		IDs = range(group_id, len(ct), key_len)
-		group = [ct[id] for id in IDs]
-		counts = [group.count(c) for c in set(group)]
-		ic = sum([n*(n-1) for n in counts])/len(group)/(len(group)-1)
-		ic_average += ic / key_len
+	for i in range(len(words)):
+		c = nums[i] = decrypt(words[i])
+		if i > 2:
+			c = (nums[i] - nums[i-1] - nums[i-2]) % 179179
+		print(chr(c), end="")
 	
-	return ic_average
 
 
-def Chi_square_test(ct: str, key_len: int):
-	
-	F = [0.082, 0.014, 0.028, 0.038, 0.131, 0.029, 0.020, 0.053, 0.064, 0.001, 0.004, 0.034, 0.025, 0.071, 0.080, 0.020, 0.001, 0.068, 0.061, 0.105, 0.025, 0.009, 0.015, 0.002, 0.020, 0.001]
-	key = ""
+def decrypt(word):
+	num = 0
+	for i in range(len(word)):
+		num += code.index(word[i]) * pow(len(code), i)
+	return num
 
-	for key_id in range(key_len):
-
-		IDs = range(key_id, len(ct), key_len)
-		group = [ct[id] for id in IDs]
-		chi_square_min = 1000000000
-		key_char = ""
-
-		for shift in range(26):
-			group_shift = [chr((ord(g)-65-shift)%26+65) for g in group]
-
-			f = [0] * 26
-			chi_square = 0
-			for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-			# for c in set(group):
-				f_i = group_shift.count(c)/len(group_shift)
-				F_i = F[ord(c)-65]
-				chi_square += pow(f_i - F_i, 2) / F_i
-
-			# print( "{}\t{}\t{}".format(chr(shift+65), "".join(group_shift), chi_square) )
-			if chi_square < chi_square_min:
-				chi_square_min = chi_square
-				key_char = chr(shift+65)
-
-		key += key_char
-
-	print(key)
 
 
 if __name__ == "__main__":
