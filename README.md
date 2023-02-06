@@ -1,11 +1,11 @@
 # Python sploits
 
-Hello there! It is my set of useful sploits/scripts written on Python3.
+Hi! This is my set of useful exploits/scripts in Python3.
 
-These sploits solve CTF tasks, such as:
+These exploits are designed to solve CTF tasks:
 - WEB
 - Crypto
 - Reverse
 - PWN
 
-Use and give feedback!
+Use it and give me feedback!
