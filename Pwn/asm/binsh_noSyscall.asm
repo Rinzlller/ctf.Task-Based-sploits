@@ -1,5 +1,5 @@
 BITS 64
-; Author Rinzler - l33tim Team
+; Author Rinzler - l33t1m Team
 ; /bin/sh without syscall Linux x86_64 Shellcode
 ; Shellcode size 35 bytes
 global _start
@@ -25,4 +25,4 @@ _push_syscall:
 	call _edit_syscall
 
 _syscall:	db 0eh
-			db 05h 
+			db 05h

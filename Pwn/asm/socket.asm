@@ -1,5 +1,5 @@
 BITS 64
-; Author Rinzler - l33tim Team
+; Author Rinzler - l33t1m Team
 ; /bin/sh Linux x86_64 Shellcode
 ; Shellcode size 22 bytes
 global _start

