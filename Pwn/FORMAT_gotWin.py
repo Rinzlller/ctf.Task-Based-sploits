@@ -25,7 +25,7 @@ def main():
 
 	# pl = "%7$p<---" + p64(0xdeadface)
 	s.send(pl.ljust(255))
-	s.interactive()
+	s.interactive()	
 
 if __name__=="__main__":
 	main()

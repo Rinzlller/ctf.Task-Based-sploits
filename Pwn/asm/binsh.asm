@@ -8,6 +8,7 @@ _start:
 	push 59
 	pop rax
 	cdq
+	
 	push rdx
 	mov rdi, 0x68732f2f6e69622f
 	push rdi
