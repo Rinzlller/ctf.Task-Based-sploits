@@ -1,11 +1,13 @@
-# Python sploits
+# Writeups Index
 
-Hi! This is my set of useful exploits/scripts in Python3.
+There are all my CTF sploits derived by categories and topics
 
-These exploits are designed to solve CTF tasks:
-- WEB
-- Crypto
-- Reverse
-- PWN
+# PWN
 
-Use it and give me feedback!
+<details>
+  <summary><strong>Heap</strong></summary>
+
+  - Double Free → [Srdnlen CTF 2025. Kinderheim 511](https://github.com/Rinzlller/ctf.Task-Based-sploits/tree/main/SrdnlenCTF_2025/pwn.Kinderheim_511)
+    > *...the memory (chunk) is freed in the heap, but the memory (chunk) address is not zeroed in the memories list...*
+
+</details>
