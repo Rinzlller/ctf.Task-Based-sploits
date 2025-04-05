@@ -6,3 +6,7 @@ desk.py
 
 # Trash
 __pycache__
+core
+*.gdb
+flag
+flag.txt
